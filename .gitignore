@@ -214,6 +214,9 @@ UpgradeLog*.htm
 *.mdf
 *.ldf
 
+# Ignore SQL-lite files
+*.db
+
 # Business Intelligence projects
 *.rdl.data
 *.bim.layout
@@ -262,3 +265,9 @@ __pycache__/
 
 # Omit our lib folders that are being restored from npm
 CoreWiki/wwwroot/lib/
+!CoreWiki/wwwroot/lib/simplemde
+
+# Cake files
+[Tt]ools/
+[Oo]utput/
+*.pubxml

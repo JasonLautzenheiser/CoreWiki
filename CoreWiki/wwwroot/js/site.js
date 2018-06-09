@@ -3,7 +3,7 @@
 
 	var reformatTimeStamps = function () {
 
-		var timeStamps = document.getElementsByClassName("timeStampValue");
+		var timeStamps = document.querySelectorAll(".timeStampValue");
 		for (var ts of timeStamps) {
 
 			var thisTimeStamp = ts.getAttribute("data-value");
@@ -17,3 +17,11 @@
 	reformatTimeStamps();
 
 })();
+
+//Prevent duplicate submit
+
+$("form").submit(function () {
+	if ($(this).valid()) {
+		$(this).find(':submit').attr('disabled', 'disabled');
+	}
+});

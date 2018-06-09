@@ -21,16 +21,66 @@ namespace CoreWiki.Migrations
 
             modelBuilder.Entity("CoreWiki.Models.Article", b =>
                 {
-                    b.Property<string>("Topic")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd();
 
                     b.Property<string>("Content");
 
-                    b.Property<DateTime>("Published");
+                    b.Property<DateTime>("PublishedDateTime")
+                        .HasColumnName("Published");
 
-                    b.HasKey("Topic");
+                    b.Property<string>("Slug");
+
+                    b.Property<string>("Topic")
+                        .IsRequired()
+                        .HasMaxLength(100);
+
+                   	b.Property<int>("ViewCount");
+
+                    b.HasKey("Id");
+
+
+                    b.HasIndex("Slug")
+                        .IsUnique();
 
                     b.ToTable("Articles");
+                });
+
+            modelBuilder.Entity("CoreWiki.Models.Comment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<int?>("ArticleId");
+
+                    b.Property<string>("Content")
+                        .IsRequired();
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasMaxLength(100);
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(100);
+
+                    b.Property<int>("IdArticle");
+
+                    b.Property<DateTime>("SubmittedDateTime")
+                        .HasColumnName("Submitted");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ArticleId");
+
+                    b.ToTable("Comments");
+                });
+
+            modelBuilder.Entity("CoreWiki.Models.Comment", b =>
+                {
+                    b.HasOne("CoreWiki.Models.Article", "Article")
+                        .WithMany("Comments")
+                        .HasForeignKey("ArticleId");
                 });
 #pragma warning restore 612, 618
         }

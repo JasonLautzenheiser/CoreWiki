@@ -6,34 +6,70 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using CoreWiki.Models;
+using NodaTime;
+using CoreWiki.Helpers;
 
 namespace CoreWiki.Pages
 {
 	public class DetailsModel : PageModel
 	{
 		private readonly CoreWiki.Models.ApplicationDbContext _context;
-
-		public DetailsModel(CoreWiki.Models.ApplicationDbContext context)
+		private readonly IClock _clock;
+		public DetailsModel(CoreWiki.Models.ApplicationDbContext context, IClock clock)
 		{
 			_context = context;
+			_clock = clock;
 		}
 
 		public Article Article { get; set; }
 
-		public async Task<IActionResult> OnGetAsync(string topicName)
+		public async Task<IActionResult> OnGetAsync(string slug)
 		{
 
-			// TODO: If topicName not specified, default to Home Page
+            // TODO: If topicName not specified, default to Home Page
 
-			topicName = topicName ?? "HomePage";
+            slug = slug ?? "home-page";
 
-			Article = await _context.Articles.SingleOrDefaultAsync(m => m.Topic == topicName);
+			Article = await _context.Articles.Include(x => x.Comments).SingleOrDefaultAsync(m => m.Slug == slug.ToLower());
 
 			if (Article == null)
 			{
-				return NotFound();
+				return new ArticleNotFoundResult();
 			}
+
+			if (Request.Cookies[Article.Topic] == null)
+			{
+				Article.ViewCount++;
+				Response.Cookies.Append(Article.Topic, "foo", new Microsoft.AspNetCore.Http.CookieOptions
+				{
+					Expires = DateTime.UtcNow.AddMinutes(5)
+				});
+
+				await _context.SaveChangesAsync();
+			}
+
 			return Page();
+	}
+
+		public async Task<IActionResult> OnPostAsync(Models.Comment comment)
+		{
+			TryValidateModel(comment);
+			Article = await _context.Articles.Include(x => x.Comments).SingleOrDefaultAsync(m => m.Id == comment.IdArticle);
+
+			if (Article == null)
+								 return new ArticleNotFoundResult();
+
+			if (!ModelState.IsValid)
+								 return Page();
+
+			comment.Article = this.Article;
+
+			comment.Submitted = _clock.GetCurrentInstant();
+
+			_context.Comments.Add(comment);
+			await _context.SaveChangesAsync();
+
+			return Redirect($"/{Article.Slug}");
 		}
 	}
 }
